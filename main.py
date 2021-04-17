@@ -7,6 +7,8 @@ from config import tok
 
 bot = telebot.TeleBot(tok)
 
+need_format = False
+
 def sender(id, text):
     bot.send_message(id, text)
 
@@ -15,18 +17,18 @@ def send_photo(id, image):
 
 @bot.message_handler(commands=['start'])
 def starter(message):
-    sender(message.chat.id, 'Выберите одну из следующих комманд:\n/ping\n/my_id\n/photo\n/wallpaper')
+    sender(message.chat.id, 'Выбери одну из следующих комманд:\n/ping\n/my_id\n/photo\n/wallpaper\n/autoformat')
 
 
 @bot.message_handler(commands=['ping'])
 def pinger(message):
     st = message.date.real
-    sender(message.chat.id, f'Ваш пинг: {round(time()-st, 2)}')
+    sender(message.chat.id, f'Твой пинг: {round(time()-st, 2)}')
 
 
 @bot.message_handler(commands=['my_id'])
 def ider(message):
-    sender(message.chat.id, message.chat.id,)
+    sender(message.chat.id, message.chat.id)
 
 
 @bot.message_handler(commands=['photo'])
@@ -51,11 +53,11 @@ def loader(message):
     if message.photo:
         img = bot.get_file(message.photo[-1].file_id)
         path = bot.download_file(img.file_path)
-        with open('wall.jpeg', 'wb') as file:
+        with open('wall.jpg', 'wb') as file:
             file.write(path)
         file.close()
-        ctypes.windll.user32.SystemParametersInfoW(20, 0, pat('wall.jpeg'), 0)
-        sender(message.chat.id, 'Обои успешно установлены!!!')
+        ctypes.windll.user32.SystemParametersInfoW(20, 0, pat('wall.jpg'), 0)
+        sender(message.chat.id, 'Обои успешно установлены!')
     elif 'http' in message.text.lower():
         try:
             img = urllib.request.urlopen(message.text).read()
@@ -63,11 +65,45 @@ def loader(message):
                 file.write(img)
             file.close()
             ctypes.windll.user32.SystemParametersInfoW(20, 0, pat('wall.jpg'), 0)
-            sender(message.chat.id, 'Обои успешно установлены!!!')
+            sender(message.chat.id, 'Обои успешно установлены!')
         except:
-            sender(message.chat.id, 'По этой ссылке установить изображение невозможно. Примите наши соболезнования(')
+            sender(message.chat.id, 'По этой ссылке установить изображение невозможно. Прими мои соболезнования(')
     else:
         sender(message.chat.id, 'Что-то пошло не так...')
 
 
+@bot.message_handler(commands=['autoformat'])
+def to_format(message):
+    need_format = True
+    msg = bot.send_message(message.chat.id, 'Пришли мне Python документ и я сделаю из него конфет')
+    bot.register_next_step_handler(msg, formater)
+
+
+@bot.message_handler(content_types = ['document'], func = lambda need_format: ((need_format == True) and (message.document)))
+def formater(message):
+    if message.document:
+        if message.document.file_name.endswith('.py'):
+            doc = bot.get_file(message.document.file_id)
+            path = bot.download_file(doc.file_path)
+
+            with open(f'loaded{message.chat.id}.py', 'wb') as file:
+                file.write(path)
+            file.close()
+            sender(message.chat.id, 'Файл загружен! Идет обработка...')
+
+            s(f'yapf -i loaded{message.chat.id}.py')
+            sender(message.chat.id, 'Держи свой конфет!)')
+
+            file = open(f'loaded{message.chat.id}.py', 'rb')
+            bot.send_document(message.chat.id, file)
+            file.close()
+            s(f'del loaded{message.chat.id}.py')
+        else:
+            sender(message.chat.id, 'Отправь документ Python. Другой вид я не форматирую.')
+        need_format = False
+    else:
+        sender(message.chat.id, 'Что-то пошло не так(')
+    need_format = False
+
 bot.polling(none_stop = True, interval = 0)
+
