@@ -56,7 +56,6 @@ def loader(message):
         file.close()
         ctypes.windll.user32.SystemParametersInfoW(20, 0, pat('wall.jpeg'), 0)
         sender(message.chat.id, 'Обои успешно установлены!!!')
-        s('del wall.jpeg')
     elif 'http' in message.text.lower():
         try:
             img = urllib.request.urlopen(message.text).read()
@@ -65,7 +64,6 @@ def loader(message):
             file.close()
             ctypes.windll.user32.SystemParametersInfoW(20, 0, pat('wall.jpg'), 0)
             sender(message.chat.id, 'Обои успешно установлены!!!')
-            s('del wall.jpg')
         except:
             sender(message.chat.id, 'По этой ссылке установить изображение невозможно. Примите наши соболезнования(')
     else:
