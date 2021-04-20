@@ -23,15 +23,10 @@ def send_photo(id, image):
     bot.send_photo(id, image)
 
 
+
 @bot.message_handler(commands=['start'])
 def start(message):
-    rmk = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btns = ['/pc_info', '/communication']
-
-    for btn in btns:
-        rmk.add(types.InlineKeyboardButton(btn))
-
-    bot.send_message(message.chat.id, 'Выбери тип:', reply_markup=rmk)
+    bot.send_message(message.chat.id, '/pc_info')
 
 
 @bot.message_handler(commands=['pc_info'])
@@ -43,22 +38,6 @@ def pc_info(message):
         rmk.add(types.InlineKeyboardButton(btn))
 
     bot.send_message(message.chat.id, 'Выбери одну из следующих комманд:', reply_markup=rmk)
-
-@bot.message_handler(content_types=['text'])
-def saw(message):
-    id = message.chat.id
-    msg = message.text
-
-    if msg == 'Привет' or msg =='Приветик' or msg == 'Приветствую' or msg == 'И тебе привет' or msg == 'Здаров' or msg == 'Мир тебе, путник':
-        answer = ['И тебе привет', 'Привет', 'Приветик', 'Здаров', 'Мир тебе, путник!']
-        sender(id, random.choice(answer))
-
-    if msg == 'Как дела?' or msg == 'Что нового?' or msg == 'Как ты?' or msg == 'Как дела' or msg == 'Что нового' or msg == 'Как ты':
-        a = ['Все хорошо', 'Отлично', 'Работаю', 'Делаю свои дела)', 'Думаю что все хорошо)']
-        sender(id, random.choice(a))
-
-    if msg == 'Какие новости в мире' or msg == 'Какие новости' or msg == 'Что происходит в мире':
-        parse_news(message)
 
 @bot.message_handler(commands=['ping'])
 def ping(message):
@@ -177,11 +156,30 @@ def camera(message):
     s('del cam.jpg')
 
 
+@bot.message_handler(content_types=['text'])
+def saw(message):
+    id = message.chat.id
+    msg = message.text
+
+    if msg == 'Привет' or msg =='Приветик' or msg == 'Приветствую' or msg == 'И тебе привет' or msg == 'Здаров' or msg == 'Мир тебе, путник':
+        answer = ['И тебе привет', 'Привет', 'Приветик', 'Здаров', 'Мир тебе, путник!']
+        sender(id, random.choice(answer))
+
+    if msg == 'Как дела?' or msg == 'Что нового?' or msg == 'Как ты?' or msg == 'Как дела' or msg == 'Что нового' or msg == 'Как ты':
+        a = ['Все хорошо', 'Отлично', 'Работаю', 'Делаю свои дела)', 'Думаю что все хорошо)']
+        sender(id, random.choice(a))
+
+    if msg == 'Какие новости в мире' or msg == 'Какие новости' or msg == 'Что происходит в мире':
+        parse_news_word(message)
+
+    if msg == 'Какие новости в Абхазии' or msg == 'Новости в Абхазии' or msg == 'Что происходит в Абхазии':
+        parse_news_abh(message)
+
 
 # ПАРСЕРЫ
 
 # Парсинг мировых новостей с РБК
-def parse_news(message):
+def parse_news_word(message):
     URL = 'https://www.rbc.ru/newspaper/2021/04/19'
     HEADERS = {
         'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36 Edg/89.0.774.77'
@@ -198,9 +196,28 @@ def parse_news(message):
             'link': item.find('a', class_='newspaper-section__group__news__link').get('href')
         })
     a = random.choice(comps)
-    bot.send_message(message.chat.id, f'{a["title"]} {a["link"]}')
+    bot.send_message(message.chat.id, f'{a["title"]} \n\n {a["link"]}')
 
 
+# Парсинг абхазских новостей со Sputnik-Abkhazia
+def parse_news_abh(message):
+    URL = 'https://plainnews.ru/abhaziya'
+    HEADERS = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36 Edg/89.0.774.77'
+    }
+
+    response = requests.get(URL, headers=HEADERS)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    items = soup.findAll('div', class_='feed__item col-12 js--feed_item feed__item_text feed__item_with-left-image')
+    comps = []
+
+    for item in items:
+        comps.append({
+            'title': item.find('a', class_='js-feed-link link link_theme_black').get_text(strip=True),
+            'link': item.find('a', class_='js-feed-link link link_theme_black').get('href')
+        })
+    a = random.choice(comps)
+    bot.send_message(message.chat.id, f'{a["title"]} \n\n {a["link"]}')
 
 
 bot.polling(none_stop = True, interval = 0)
