@@ -262,4 +262,5 @@ def web_search_google(message):  # осуществляет поиск в инт
         bot.send_message(message.chat.id, f'{comp["title"]} \n\n {comp["link"]}')
 
 
+print('Ботик запущен')
 bot.polling(none_stop = True, interval = 0)
