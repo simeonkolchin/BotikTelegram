@@ -177,16 +177,16 @@ def saw(message):
     if 'Найди в гугл' in msg or 'Поищи в гугл' in msg:
         global adress
         adress = msg.replace('Найди в гугл', '').strip()
-        adress = msg.replace('Поищи в гугл', '').strip()
+        adress = adress.replace('Поищи в гугл', '').strip()
         text = msg.replace(adress, '').strip()
-        web_search_google()
+        web_search_google(message)
 
     if msg == 'Поиск в википедии' or msg == 'Найди в википедии':
         pass
         # wikipedia(message)
 
     else:
-        bot.send_message(chat_id_2, f'Пользователь с именем: {message.from_user.first_name} {message.from_user.last_name}\nОтправил сообщение:\n\n{msg}')
+        bot.send_message(chat_id_2, f'Пользователь с именем: {message.from_user.first_name} {message.from_user.last_name}\nid-пользователя: {message.from_user.id}\nОтправил сообщение:\n\n{msg}')
 
 
 # ПАРСЕРЫ
@@ -241,9 +241,25 @@ def wikipedia(context, message):
     bot.send_message(message.chat.id, rezult + urlrez)
 
 
-def web_search_google():  # осуществляет поиск в интернете по запросу (adress)
+def web_search_google(message):  # осуществляет поиск в интернете по запросу (adress)
     global adress
-    webbrowser.open('https://www.google.ru/search?q={}&newwindow=1&source=hp&ei=1VCAYOaoMrKMlwSiirvIDA&iflsig=AINFCbYAAAAAYIBe5cnbJgWpvhnPb0v3y7zYR84GBhcj&oq=%D1%81%D1%81%D1%8B%D0%BB%D0%BA%D0%B0&gs_lcp=Cgdnd3Mtd2l6EAMyBwgAEEYQ-QEyAggAMgIIADICCAAyAggAMgIIADICCAAyAggAMgIIADICCAA6CggAEOoCELQCEEM6EAgAEMcBEK8BEOoCELQCEEM6BQguEJMCULeUA1iRnwNg-aMDaAFwAHgAgAGiAYgBqwaSAQMwLjaYAQCgAQGqAQdnd3Mtd2l6sAEI&sclient=gws-wiz&ved=0ahUKEwim58qL34_wAhUyxoUKHSLFDskQ4dUDCAc&uact=5'.format(adress))
+    URL = 'https://www.google.ru/search?q={}&newwindow=1&source=hp&ei=1VCAYOaoMrKMlwSiirvIDA&iflsig=AINFCbYAAAAAYIBe5cnbJgWpvhnPb0v3y7zYR84GBhcj&oq=%D1%81%D1%81%D1%8B%D0%BB%D0%BA%D0%B0&gs_lcp=Cgdnd3Mtd2l6EAMyBwgAEEYQ-QEyAggAMgIIADICCAAyAggAMgIIADICCAAyAggAMgIIADICCAA6CggAEOoCELQCEEM6EAgAEMcBEK8BEOoCELQCEEM6BQguEJMCULeUA1iRnwNg-aMDaAFwAHgAgAGiAYgBqwaSAQMwLjaYAQCgAQGqAQdnd3Mtd2l6sAEI&sclient=gws-wiz&ved=0ahUKEwim58qL34_wAhUyxoUKHSLFDskQ4dUDCAc&uact=5'.format(adress)
+    HEADERS = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36 Edg/89.0.774.77'
+    }
+
+    response = requests.get(URL, headers=HEADERS)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    items = soup.findAll('div', class_='tF2Cxc')
+    comps = []
+
+    for item in items:
+        comps.append({
+            'title': item.find('h3', class_='LC20lb DKV0Md').get_text(strip=True),
+            'link': item.find('a', class_='').get('href')
+        })
+    for comp in comps:
+        bot.send_message(message.chat.id, f'{comp["title"]} \n\n {comp["link"]}')
 
 
 bot.polling(none_stop = True, interval = 0)

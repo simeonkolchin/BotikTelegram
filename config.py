@@ -1,0 +1,3 @@
+TOKEN = '1760966648:AAE3l7mX2pCoEaRJQU4yNsCnyDf_8cQzozA'
+chat_id_1 = 993699116
+chat_id_2 = 1647407069
