@@ -7,13 +7,14 @@ import platform as pf
 from pyautogui import screenshot as scr
 from os.path import abspath as pat
 from time import time
-from config import TOKEN, CHAT_ID
+from config import TOKEN, chat_id_1, chat_id_2
+import wiki
 
 bot = telebot.TeleBot(TOKEN)
 
 need_format = False
 
-requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={CHAT_ID}&text=Активирован")
+requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={chat_id_2}&text=Online")
 
 
 def sender(id, text):
@@ -26,18 +27,8 @@ def send_photo(id, image):
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, '/pc_info')
+    bot.send_message(message.chat.id, 'Приветствую тебя ')
 
-
-@bot.message_handler(commands=['pc_info'])
-def pc_info(message):
-    rmk = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    btns = ['/ping', '/my_id', '/photo', '/wallpaper', '/autoformat', '/ip', '/spec', '/camera']
-
-    for btn in btns:
-        rmk.add(types.InlineKeyboardButton(btn))
-
-    bot.send_message(message.chat.id, 'Выбери одну из следующих комманд:', reply_markup=rmk)
 
 @bot.message_handler(commands=['ping'])
 def ping(message):
@@ -52,20 +43,22 @@ def my_id(message):
 
 @bot.message_handler(commands=['photo'])
 def screen(message):
-    try:
-        scr('screenshot.jpeg')
-        file = open('screenshot.jpeg', 'rb')
-        send_photo(message.chat.id, file)
-        file.close()
-        s('del screenshot.jpeg')
-    except:
-        sender(message.chat.id, 'Error!')
+    if message.chat.id == chat_id_1 or message.chat.id == chat_id_2:
+        try:
+            scr('screenshot.jpeg')
+            file = open('screenshot.jpeg', 'rb')
+            send_photo(message.chat.id, file)
+            file.close()
+            s('del screenshot.jpeg')
+        except:
+            sender(message.chat.id, 'Error!')
 
 
 @bot.message_handler(commands=['wallpaper'])
 def desk(message):
-    msg = bot.send_message(message.chat.id, 'Пришли мне фото или ссылку на фото')
-    bot.register_next_step_handler(msg, loader)
+    if message.chat.id == chat_id_1 or message.chat.id == chat_id_2:
+        msg = bot.send_message(message.chat.id, 'Пришли мне фото или ссылку на фото')
+        bot.register_next_step_handler(msg, loader)
 
 @bot.message_handler(content_types=['photo', 'text'], func = lambda message: ((message.photo) or (message.text and ('http' in message.text.lower()))))
 def loader(message):
@@ -125,35 +118,39 @@ def formater(message):
     need_format = False
 
 
-
 @bot.message_handler(commands=['ip', 'ip_address'])
 def ip_address(message):
-    response = requests.get('http://jsonip.com/').json()
-    bot.send_message(message.chat.id, f'IP Адрес: {response["ip"]}')
+    if message.chat.id == chat_id_1 or message.chat.id == chat_id_2:
+        response = requests.get('http://jsonip.com/').json()
+        sender(message.chat.id, f'IP Адрес: {response["ip"]}')
 
 
 @bot.message_handler(commands=['spec', 'specifications'])
 def spec(message):
-    msg = f"Имя компьютера: {pf.node()}\nПроцессор: {pf.processor()}\nСистема: {pf.system()} {pf.release()}"
-    bot.send_message(message.chat.id, msg)
+    if message.chat.id == chat_id_1 or message.chat.id == chat_id_2:
+        msg = f"Имя компьютера: {pf.node()}\nПроцессор: {pf.processor()}\nСистема: {pf.system()} {pf.release()}"
+        sender(message.chat.id, msg)
 
 
 @bot.message_handler(commands=['camera', 'cam'])
 def camera(message):
-    cap = cv2.VideoCapture(0)
+    if message.chat.id == chat_id_1 or message.chat.id == chat_id_2:
+        cap = cv2.VideoCapture(0)
 
-    for i in range(30):
-        cap.read()
+        for i in range(30):
+            cap.read()
 
-    ret, frame = cap.read()
+        ret, frame = cap.read()
 
-    cv2.imwrite('cam.jpg', frame)
-    cap.release()
+        cv2.imwrite('cam.jpg', frame)
+        cap.release()
 
-    with open('cam.jpg', 'rb') as img:
-        bot.send_photo(message.chat.id, img)
+        with open('cam.jpg', 'rb') as img:
+            bot.send_photo(message.chat.id, img)
 
-    s('del cam.jpg')
+        s('del cam.jpg')
+
+
 
 
 @bot.message_handler(content_types=['text'])
@@ -174,6 +171,13 @@ def saw(message):
 
     if msg == 'Какие новости в Абхазии' or msg == 'Новости в Абхазии' or msg == 'Что происходит в Абхазии':
         parse_news_abh(message)
+
+    if msg == 'Поиск в википедии' or msg == 'Найди в википедии':
+        pass
+        # wikipedia(message)
+
+    else:
+        bot.send_message(chat_id_2, msg)
 
 
 # ПАРСЕРЫ
@@ -218,6 +222,16 @@ def parse_news_abh(message):
         })
     a = random.choice(comps)
     bot.send_message(message.chat.id, f'{a["title"]} \n\n {a["link"]}')
+
+
+# Поиск в википедии
+def wikipedia(context, message):
+    bot.send_message(message.chat.id, "Идет поиск в википедии...")
+    context.user_data[str(random.randint(1000000,9999999))] = (" ".join(context.args))
+    rezult, urlrez = wiki.search_wiki(" ".join(context.args))
+    bot.send_message(message.chat.id, rezult + urlrez)
+
+
 
 
 bot.polling(none_stop = True, interval = 0)
