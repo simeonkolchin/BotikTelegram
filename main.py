@@ -2,6 +2,7 @@ import telebot, ctypes, requests, urllib.request, cv2, os, random
 from os import system as s
 from bs4 import BeautifulSoup
 from telebot import types
+import webbrowser
 import pyautogui as pag
 import platform as pf
 from pyautogui import screenshot as scr
@@ -12,6 +13,7 @@ import wiki
 
 bot = telebot.TeleBot(TOKEN)
 
+adress = ''
 need_format = False
 
 requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage?chat_id={chat_id_2}&text=Online")
@@ -25,15 +27,15 @@ def send_photo(id, image):
 
 
 
-@bot.message_handler(commands=['start'])
+@bot.message_handler(commands=['start', 'help'])
 def start(message):
-    bot.send_message(message.chat.id, 'Приветствую тебя ')
+    bot.send_message(message.chat.id, 'Приветствую тебя в этом замечательном Ботике.\nЗдесь реализованы функции с помощью общения\nНапиши боту например: "Какие новости"\nи он отправит мировые новости с РБК')
 
 
 @bot.message_handler(commands=['ping'])
 def ping(message):
     st = message.date.real
-    sender(message.chat.id, f'Твой пинг: {round(time()-st+41, 2)}')
+    sender(message.chat.id, f'Твой пинг: {round(time()-st+42, 2)}')
 
 
 @bot.message_handler(commands=['my_id'])
@@ -172,12 +174,19 @@ def saw(message):
     if msg == 'Какие новости в Абхазии' or msg == 'Новости в Абхазии' or msg == 'Что происходит в Абхазии':
         parse_news_abh(message)
 
+    if 'Найди в гугл' in msg or 'Поищи в гугл' in msg:
+        global adress
+        adress = msg.replace('Найди в гугл', '').strip()
+        adress = msg.replace('Поищи в гугл', '').strip()
+        text = msg.replace(adress, '').strip()
+        web_search_google()
+
     if msg == 'Поиск в википедии' or msg == 'Найди в википедии':
         pass
         # wikipedia(message)
 
     else:
-        bot.send_message(chat_id_2, msg)
+        bot.send_message(chat_id_2, f'Пользователь с именем: {message.from_user.first_name} {message.from_user.last_name}\nОтправил сообщение:\n\n{msg}')
 
 
 # ПАРСЕРЫ
@@ -232,6 +241,9 @@ def wikipedia(context, message):
     bot.send_message(message.chat.id, rezult + urlrez)
 
 
+def web_search_google():  # осуществляет поиск в интернете по запросу (adress)
+    global adress
+    webbrowser.open('https://www.google.ru/search?q={}&newwindow=1&source=hp&ei=1VCAYOaoMrKMlwSiirvIDA&iflsig=AINFCbYAAAAAYIBe5cnbJgWpvhnPb0v3y7zYR84GBhcj&oq=%D1%81%D1%81%D1%8B%D0%BB%D0%BA%D0%B0&gs_lcp=Cgdnd3Mtd2l6EAMyBwgAEEYQ-QEyAggAMgIIADICCAAyAggAMgIIADICCAAyAggAMgIIADICCAA6CggAEOoCELQCEEM6EAgAEMcBEK8BEOoCELQCEEM6BQguEJMCULeUA1iRnwNg-aMDaAFwAHgAgAGiAYgBqwaSAQMwLjaYAQCgAQGqAQdnd3Mtd2l6sAEI&sclient=gws-wiz&ved=0ahUKEwim58qL34_wAhUyxoUKHSLFDskQ4dUDCAc&uact=5'.format(adress))
 
 
 bot.polling(none_stop = True, interval = 0)
