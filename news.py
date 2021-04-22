@@ -2,6 +2,7 @@ import telebot, requests, random
 from bs4 import BeautifulSoup
 from config import TOKEN
 
+
 bot = telebot.TeleBot(TOKEN)
 
 

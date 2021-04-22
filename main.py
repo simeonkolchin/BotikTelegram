@@ -1,9 +1,5 @@
-import telebot, ctypes, requests, urllib.request, cv2, os, random
+import telebot, ctypes, requests, urllib.request, cv2, random
 from os import system as s
-from bs4 import BeautifulSoup
-from telebot import types
-import webbrowser
-import pyautogui as pag
 import platform as pf
 from pyautogui import screenshot as scr
 from os.path import abspath as pat
@@ -11,6 +7,10 @@ from time import time
 from config import TOKEN, chat_id_1, chat_id_2
 import wiki
 from news import parse_news_abh, parse_news_word
+from web_search import  web_search_google
+from music import  parse_music
+
+
 bot = telebot.TeleBot(TOKEN)
 
 adress = ''
@@ -175,10 +175,6 @@ def saw(message):
         parse_news_abh(message)
 
     if 'Найди в гугл' in msg or 'Поищи в гугл' in msg:
-        global adress
-        adress = msg.replace('Найди в гугл', '').strip()
-        adress = adress.replace('Поищи в гугл', '').strip()
-        text = msg.replace(adress, '').strip()
         web_search_google(message)
 
     if msg == 'Музыка' or msg == 'Музон' or msg == 'Отправь музыку':
@@ -210,67 +206,6 @@ def wikipedia(context, message):
     rezult, urlrez = wiki.search_wiki(" ".join(context.args))
     bot.send_message(message.chat.id, rezult + urlrez)
 
-
-def web_search_google(message):  # осуществляет поиск в интернете по запросу (adress)
-    URL = 'https://www.google.ru/search?q={}&newwindow=1&source=hp&ei=1VCAYOaoMrKMlwSiirvIDA&iflsig=AINFCbYAAAAAYIBe5cnbJgWpvhnPb0v3y7zYR84GBhcj&oq=%D1%81%D1%81%D1%8B%D0%BB%D0%BA%D0%B0&gs_lcp=Cgdnd3Mtd2l6EAMyBwgAEEYQ-QEyAggAMgIIADICCAAyAggAMgIIADICCAAyAggAMgIIADICCAA6CggAEOoCELQCEEM6EAgAEMcBEK8BEOoCELQCEEM6BQguEJMCULeUA1iRnwNg-aMDaAFwAHgAgAGiAYgBqwaSAQMwLjaYAQCgAQGqAQdnd3Mtd2l6sAEI&sclient=gws-wiz&ved=0ahUKEwim58qL34_wAhUyxoUKHSLFDskQ4dUDCAc&uact=5'.format(adress)
-    HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36 Edg/89.0.774.77'
-    }
-
-    response = requests.get(URL, headers=HEADERS)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    items = soup.findAll('div', class_='tF2Cxc')
-    comps = []
-
-    for item in items:
-        comps.append({
-            'title': item.find('h3', class_='LC20lb DKV0Md').get_text(strip=True),
-            'link': item.find('a', class_='').get('href')
-        })
-    for comp in comps:
-        bot.send_message(message.chat.id, f'{comp["title"]} \n\n {comp["link"]}')
-
-
-
-def web_search_youtube(message):  # осуществляет поиск в интернете по запросу (adress)
-    webbrowser.open('https://www.youtube.com/results?search_query={}'.format(adress))
-    # HEADERS = {
-    #     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36 Edg/89.0.774.77'
-    # }
-
-    # response = requests.get(URL, headers=HEADERS)
-    # soup = BeautifulSoup(response.content, 'html.parser')
-    # items = soup.findAll('div', class_='style-scope ytd-video-renderer')
-    # comps = []
-
-    # for item in items:
-    #     comps.append({
-    #         'title': item.find('a', class_='yt-simple-endpoint style-scope ytd-video-renderer').get_text(strip=True),
-    #         'link': item.find('a', class_='yt-simple-endpoint style-scope ytd-video-renderer').get('href')
-    #     })
-    # for comp in comps:
-    #     bot.send_message(message.chat.id, f'{comp["title"]} \n\n {comp["link"]}')
-
-
-def parse_music(message):
-    URL = 'https://music.yandex.ru/users/music.partners/playlists/1757'
-    HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.128 Safari/537.36 Edg/89.0.774.77'
-    }
-
-    response = requests.get(URL, headers=HEADERS)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    items = soup.findAll('div', class_='d-track typo-track d-track_selectable d-track_with-cover')
-    comps = []
-
-    for item in items:
-        comps.append({
-            'title': item.find('a', class_='d-track__title deco-link deco-link_stronger').get_text(strip=True),
-            'link': item.find('a', class_='d-track__title deco-link deco-link_stronger').get('href'),
-            'img': item.find('img', class_='entity-cover__image').get('src')
-        })
-    a = random.choice(comps)
-    bot.send_message(message.chat.id, f'{a["title"]}\nhttps://music.yandex.ru{a["link"]}\n{a["img"]}')
 
 
 print('Ботик запущен')
