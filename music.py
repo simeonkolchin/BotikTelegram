@@ -1,5 +1,6 @@
 import telebot, requests, random, urllib.request
 from bs4 import BeautifulSoup
+from telebot import types
 from config import TOKEN
 
 
@@ -20,8 +21,27 @@ def parse_music(message):
     for item in items:
         comps.append({
             'title': item.find('div', class_='track__title').get_text(strip=True),
-            'link': item.find('a', class_='track__download-btn').get('href')
+            'link': item.find('a', class_='track__download-btn').get('href'),
+            'img': item.find('div', class_='track__img').get('style')
         })
 
     comp = random.choice(comps)
-    bot.send_message(message.chat.id, f'{comp["title"]} \n{comp["link"]}')
+
+    keyboard = types.InlineKeyboardMarkup()
+    url_button = types.InlineKeyboardButton(text='Скачать музыку', url=comp["link"])
+    keyboard.add(url_button)
+
+    msg = comp["img"]
+    adress = msg.replace("background-image: url('", "").strip()
+    adress = adress.replace("", "").rstrip(")';")
+    full_url = 'https://ruv.hotmo.org/' + adress
+    img = urllib.request.urlopen(full_url).read()
+    with open('music.jpg', 'wb') as file:
+        file.write(img)
+    file.close()
+    file = open('music.jpg', 'rb')
+
+    bot.send_photo(message.chat.id, file)
+    bot.send_message(message.chat.id, f'{comp["title"]}', reply_markup=keyboard)
+
+    file.close()

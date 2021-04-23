@@ -29,7 +29,19 @@ def send_photo(id, image):
 
 @bot.message_handler(commands=['start', 'help'])
 def start(message):
-    bot.send_message(message.chat.id, 'Приветствую тебя в этом замечательном Ботике.\nЗдесь реализованы функции с помощью общения\nНапиши боту например: "Какие новости"\nи он отправит мировые новости с РБК')
+    bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name} {message.from_user.last_name}!'
+                                      '\nВ этом замечательном ботике реализованы функции с помощью общения'
+                                      '\nТы можешь узнать:'
+                                      '\n\n"Какие новости" - и он отправит мировые новости'
+                                      '\n\n"Какие новости в Абхазии" - отправит Абхазские новости'
+                                      '\n\n"Найди в гугл (твой запрос без скобок)" - отправит несколько страниц из поиска'
+                                      '\n\n"Отправь музыку" - отправит название ссылку на скачивание'
+                                      '\n\n\nТакже есть функции:'
+                                      '\n\n/ping - узнать пинг'
+                                      '\n\n/my_id - узнать id'
+                                      '\n\n/autoformat - ты отправляешь документ Python и бот форматирует документ по стандарту pip8'
+                                      '\n\n\nПользуйся на здоровье!!!'
+                                      '\nTeam из одного человека - Ботик©')
 
 
 @bot.message_handler(commands=['ping'])
@@ -196,7 +208,7 @@ def saw(message):
 
     else:
         if message.chat.id != chat_id_1 and message.chat.id != chat_id_2:
-            bot.send_message(chat_id_2, f'Пользователь с именем: {message.from_user.first_name} {message.from_user.last_name}\nid-пользователя: {message.from_user.id}\nОтправил сообщение:\n\n{msg}')
+            bot.send_message(chat_id_2, f'Пользователь с именем: {message.from_user.first_name} {message.from_user.last_name}\nid-пользователя: {message.from_user.id}\nСсылка: @{message.from_user.username}\nОтправил сообщение:\n\n{msg}')
 
 
 # Поиск в википедии
